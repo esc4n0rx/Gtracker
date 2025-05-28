@@ -37,15 +37,16 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const router = useRouter()
   const { user, logout } = useAuth()
+  const canPost = user?.role?.name !== 'member' && user?.role?.name !== 'banned'
 
-  const navItems = [
-    { label: "Portal", href: "/dashboard", icon: Home },
-    { label: "Fórum", href: "/forum", icon: MessageSquare },
-    { label: "Regras", href: "/rules", icon: FileText },
-    { label: "Postador", href: "/upload", icon: Upload },
-    { label: "Doação", href: "/donate", icon: Heart },
-    { label: "Chat", href: "/chat", icon: MessageCircle },
-  ]
+ const navItems = [
+  { label: "Portal", href: "/dashboard", icon: Home },
+  { label: "Fórum", href: "/forum", icon: MessageSquare },
+  { label: "Regras", href: "/rules", icon: FileText },
+  ...(canPost ? [{ label: "Postador", href: "/post/new", icon: Upload }] : []),
+  { label: "Doação", href: "/donate", icon: Heart },
+  { label: "Chat", href: "/chat", icon: MessageCircle },
+]
 
   const handleLogout = () => {
     logout()

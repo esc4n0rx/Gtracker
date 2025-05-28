@@ -94,6 +94,36 @@ export interface ForumStats {
   }
 }
 
+export interface CreatePostData {
+  title: string
+  content?: string
+  forum_id: string
+  post_type: string
+  template_data?: Record<string, any>
+}
+
+export interface Post {
+  id: string
+  title: string
+  content?: string
+  slug: string
+  post_type: string
+  template_data?: Record<string, any>
+  author: {
+    id: string
+    nickname: string
+  }
+  forum: {
+    id: string
+    name: string
+  }
+  view_count: number
+  like_count: number
+  comment_count: number
+  created_at: string
+  updated_at: string
+}
+
 
 
 class ApiError extends Error {
@@ -270,6 +300,70 @@ export const forumsApi = {
       method: 'DELETE',
     })
   },
+}
+
+export const postsApi = {
+  create: async (postData: CreatePostData): Promise<Post> => {
+    const response = await apiRequest<Post>('/posts', {
+      method: 'POST',
+      body: JSON.stringify(postData),
+    })
+    return response.data!
+  },
+
+  getBySlug: async (slug: string): Promise<Post> => {
+    const response = await apiRequest<Post>(`/posts/${slug}`)
+    return response.data!
+  },
+
+  getByForum: async (forumId: string, page = 1, limit = 20): Promise<{
+    posts: Post[]
+    pagination: {
+      page: number
+      limit: number
+      total: number
+      totalPages: number
+    }
+  }> => {
+    const response = await apiRequest<{
+      posts: Post[]
+      pagination: any
+    }>(`/posts/forum/${forumId}?page=${page}&limit=${limit}`)
+    return response.data!
+  },
+
+  getTemplates: async (): Promise<any[]> => {
+    const response = await apiRequest<any[]>('/posts/templates')
+    return response.data!
+  },
+
+  update: async (id: string, postData: Partial<CreatePostData>): Promise<Post> => {
+    const response = await apiRequest<Post>(`/posts/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(postData),
+    })
+    return response.data!
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await apiRequest(`/posts/${id}`, {
+      method: 'DELETE',
+    })
+  },
+
+  toggleLike: async (id: string): Promise<{ liked: boolean; like_count: number }> => {
+    const response = await apiRequest<{ liked: boolean; like_count: number }>(`/posts/${id}/like`, {
+      method: 'POST',
+    })
+    return response.data!
+  },
+
+  movePost: async (id: string, forumId: string, reason?: string): Promise<void> => {
+    await apiRequest(`/posts/${id}/move`, {
+      method: 'PATCH',
+      body: JSON.stringify({ forum_id: forumId, reason }),
+    })
+  }
 }
 
 export { ApiError }
