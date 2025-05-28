@@ -13,7 +13,7 @@ export interface Toast {
   duration?: number
 }
 
-interface ToastProps extends Toast {
+export interface ToastProps extends Toast {
   onRemove: (id: string) => void
 }
 

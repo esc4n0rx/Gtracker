@@ -1,4 +1,4 @@
-// hooks/use-posts.ts (versão corrigida)
+// hooks/use-posts.ts
 "use client"
 
 import { useState } from 'react'
@@ -43,10 +43,23 @@ export function usePosts() {
     setError(null)
 
     try {
-      // Usar a função da API que já está configurada
-      const post = await postsApi.create(postData)
+      // Limpar e formatar os dados antes de enviar
+      const cleanedData = {
+        title: postData.title.trim(),
+        content: postData.content?.trim() || undefined,
+        forum_id: postData.forum_id,
+        post_type: postData.post_type,
+        template_data: postData.template_data && Object.keys(postData.template_data).length > 0 
+          ? postData.template_data 
+          : undefined
+      }
+
+      console.log('Dados enviados para API:', cleanedData)
+      
+      const post = await postsApi.create(cleanedData)
       return post
     } catch (err: any) {
+      console.error('Erro detalhado ao criar post:', err)
       const errorMessage = err.message || 'Erro ao criar post'
       setError(errorMessage)
       throw err

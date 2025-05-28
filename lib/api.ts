@@ -122,8 +122,11 @@ export interface Post {
   comment_count: number
   created_at: string
   updated_at: string
+  is_pinned?: boolean
+  is_locked?: boolean
+  user_liked?: boolean
+  last_activity_at?: string
 }
-
 
 
 class ApiError extends Error {
