@@ -62,8 +62,12 @@ export interface Forum {
   is_active: boolean
   created_at: string
   updated_at: string
-  topic_count?: number
-  post_count?: number
+  total_topics?: number
+  total_posts?: number
+  last_post_at?: string | null
+  last_post_user_id?: string | null
+  topic_count?: number // manter para compatibilidade
+  post_count?: number // manter para compatibilidade
   last_post?: {
     id: string
     title: string

@@ -26,26 +26,38 @@ export function ForumStats({ forum }: ForumStatsProps) {
     }
   }
 
+  const totalTopics = forum.total_topics || forum.topic_count || 0
+  const totalPosts = forum.total_posts || forum.post_count || 0
+
   return (
     <div className="flex items-center justify-between text-xs text-slate-400">
       <div className="flex space-x-4">
         <span className="flex items-center gap-1">
           <MessageSquare className="w-3 h-3" />
-          {forum.topic_count || 0} tópicos
+          {totalTopics} tópicos
         </span>
         <span className="flex items-center gap-1">
           <Eye className="w-3 h-3" />
-          {forum.post_count || 0} posts
+          {totalPosts} posts
         </span>
       </div>
 
-      {forum.last_post && (
+      {(forum.last_post || forum.last_post_at) && (
         <div className="text-right">
-          <div className="text-retro-blue">{forum.last_post.author.nickname}</div>
-          <div className="flex items-center gap-1 text-slate-500">
-            <Clock className="w-3 h-3" />
-            {formatDate(forum.last_post.created_at)}
-          </div>
+          {forum.last_post ? (
+            <>
+              <div className="text-retro-blue">{forum.last_post.author.nickname}</div>
+              <div className="flex items-center gap-1 text-slate-500">
+                <Clock className="w-3 h-3" />
+                {formatDate(forum.last_post.created_at)}
+              </div>
+            </>
+          ) : forum.last_post_at && (
+            <div className="flex items-center gap-1 text-slate-500">
+              <Clock className="w-3 h-3" />
+              {formatDate(forum.last_post_at)}
+            </div>
+          )}
         </div>
       )}
     </div>
