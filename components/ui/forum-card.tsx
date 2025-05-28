@@ -1,32 +1,44 @@
+// components/ui/forum-card.tsx (atualizar o arquivo existente)
 "use client"
 
 import type { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Forum } from "@/lib/api"
 
 interface ForumCardProps {
-  title: string
-  description: string
+  forum: Forum
   icon: LucideIcon
-  topicsCount: number
-  postsCount: number
-  lastPost?: {
-    author: string
-    time: string
-  }
   className?: string
   onClick?: () => void
 }
 
 export function ForumCard({
-  title,
-  description,
+  forum,
   icon: Icon,
-  topicsCount,
-  postsCount,
-  lastPost,
   className,
   onClick,
 }: ForumCardProps) {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Nunca'
+    
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+
+    if (diffMins < 60) {
+      return `${diffMins}min atrás`
+    } else if (diffHours < 24) {
+      return `${diffHours}h atrás`
+    } else if (diffDays < 7) {
+      return `${diffDays}d atrás`
+    } else {
+      return date.toLocaleDateString('pt-BR')
+    }
+  }
+
   return (
     <div className={cn("forum-card cursor-pointer", className)} onClick={onClick}>
       <div className="flex items-start space-x-4">
@@ -37,19 +49,21 @@ export function ForumCard({
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-bold text-retro-text mb-1">{title}</h3>
-          <p className="text-sm text-slate-400 mb-3">{description}</p>
+          <h3 className="text-lg font-bold text-retro-text mb-1">{forum.name}</h3>
+          {forum.description && (
+            <p className="text-sm text-slate-400 mb-3">{forum.description}</p>
+          )}
 
           <div className="flex items-center justify-between text-xs text-slate-500">
             <div className="flex space-x-4">
-              <span>{topicsCount} tópicos</span>
-              <span>{postsCount} posts</span>
+              <span>{forum.topic_count || 0} tópicos</span>
+              <span>{forum.post_count || 0} posts</span>
             </div>
 
-            {lastPost && (
+            {forum.last_post && (
               <div className="text-right">
-                <div className="text-retro-blue">{lastPost.author}</div>
-                <div>{lastPost.time}</div>
+                <div className="text-retro-blue">{forum.last_post.author.nickname}</div>
+                <div>{formatDate(forum.last_post.created_at)}</div>
               </div>
             )}
           </div>

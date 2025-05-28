@@ -1,3 +1,4 @@
+// components/layout/header.tsx
 "use client"
 
 import { useState } from "react"
@@ -5,6 +6,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { RetroLogo } from "@/components/ui/retro-logo"
 import { RetroButton } from "@/components/ui/retro-button"
+import { useAuth } from "@/contexts/auth-context"
 import {
   Home,
   MessageSquare,
@@ -34,6 +36,7 @@ export function Header() {
   const [messages] = useState(7)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const router = useRouter()
+  const { user, logout } = useAuth()
 
   const navItems = [
     { label: "Portal", href: "/dashboard", icon: Home },
@@ -45,7 +48,7 @@ export function Header() {
   ]
 
   const handleLogout = () => {
-    // Simular logout
+    logout()
     router.push("/login")
   }
 
@@ -91,7 +94,6 @@ export function Header() {
                 </span>
               )}
             </button>
-
             {/* Mobile Menu Button */}
             <button
               className="lg:hidden p-2 text-slate-400 hover:text-retro-neon transition-colors"
@@ -107,11 +109,21 @@ export function Header() {
                   <div className="w-8 h-8 bg-gradient-to-br from-retro-blue to-retro-purple rounded-full flex items-center justify-center">
                     <User className="w-4 h-4 text-white" />
                   </div>
-                  <span className="hidden md:block text-sm font-medium text-retro-text">Admin</span>
+                  <span className="hidden md:block text-sm font-medium text-retro-text">
+                    {user?.nickname || 'Usuário'}
+                  </span>
                   <ChevronDown className="w-4 h-4 text-slate-400" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 retro-panel border-slate-600">
+                <div className="px-3 py-2 border-b border-slate-600">
+                  <p className="text-sm font-medium text-retro-text">{user?.nome}</p>
+                  <p className="text-xs text-slate-400">{user?.email}</p>
+                  <span className="inline-block mt-1 px-2 py-0.5 text-xs rounded" 
+                        style={{ backgroundColor: user?.role.color, color: '#000' }}>
+                    {user?.role.display_name}
+                  </span>
+                </div>
                 <DropdownMenuItem className="text-retro-text hover:bg-slate-700">
                   <User className="w-4 h-4 mr-2" />
                   Meu Perfil
@@ -121,7 +133,10 @@ export function Header() {
                   Configurações
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-slate-600" />
-                <DropdownMenuItem className="text-red-400 hover:bg-red-900/20" onClick={handleLogout}>
+                <DropdownMenuItem 
+                  className="text-red-400 hover:bg-red-900/20" 
+                  onClick={handleLogout}
+                >
                   <LogOut className="w-4 h-4 mr-2" />
                   Sair
                 </DropdownMenuItem>

@@ -1,37 +1,46 @@
+// app/register/page.tsx
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import React, { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { RetroLogo } from "@/components/ui/retro-logo"
 import { RetroButton } from "@/components/ui/retro-button"
 import { RetroInput } from "@/components/ui/retro-input"
-import { User, Mail, Eye, EyeOff, UserPlus } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
+import { useToast } from "@/components/ui/toast"
+import { registerSchema, RegisterFormData } from "@/lib/validations"
+import { User, Mail, Eye, EyeOff, UserPlus, Loader2 } from "lucide-react"
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+  const { register: registerUser } = useAuth()
+  const { success, error } = useToast()
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Mock register - validação básica
-    if (formData.username && formData.email && formData.password && formData.confirmPassword) {
-      if (formData.password !== formData.confirmPassword) {
-        alert("As senhas não coincidem")
-        return
-      }
-      console.log("Registration successful:", formData)
-      // Redireciona para o dashboard
-      window.location.href = "/dashboard"
-    } else {
-      alert("Por favor, preencha todos os campos")
+  const onSubmit = async (data: RegisterFormData) => {
+    setIsLoading(true)
+    
+    try {
+      await registerUser(data)
+      success('Conta criada com sucesso!', 'Você foi automaticamente conectado.')
+      router.push('/dashboard')
+    } catch (err) {
+      error('Erro ao criar conta', err instanceof Error ? err.message : 'Tente novamente mais tarde')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -60,44 +69,57 @@ export default function RegisterPage() {
           </div>
 
           {/* Register Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="relative">
               <RetroInput
+                {...register('nome')}
                 type="text"
-                placeholder="Digite seu nome de usuário"
-                label="Nome de Usuário"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                required
+                placeholder="Digite seu nome completo"
+                label="Nome Completo"
+                error={errors.nome?.message}
+                disabled={isLoading}
               />
               <User className="absolute right-3 top-9 w-4 h-4 text-slate-400" />
             </div>
 
             <div className="relative">
               <RetroInput
+                {...register('nickname')}
+                type="text"
+                placeholder="Digite seu nome de usuário"
+                label="Nome de Usuário"
+                error={errors.nickname?.message}
+                disabled={isLoading}
+              />
+              <User className="absolute right-3 top-9 w-4 h-4 text-slate-400" />
+            </div>
+
+            <div className="relative">
+              <RetroInput
+                {...register('email')}
                 type="email"
                 placeholder="Digite seu email"
                 label="Email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
+                error={errors.email?.message}
+                disabled={isLoading}
               />
               <Mail className="absolute right-3 top-9 w-4 h-4 text-slate-400" />
             </div>
 
             <div className="relative">
               <RetroInput
+                {...register('password')}
                 type={showPassword ? "text" : "password"}
                 placeholder="Digite sua senha"
                 label="Senha"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required
+                error={errors.password?.message}
+                disabled={isLoading}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-9 text-slate-400 hover:text-slate-300"
+                disabled={isLoading}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -105,25 +127,42 @@ export default function RegisterPage() {
 
             <div className="relative">
               <RetroInput
+                {...register('confirmPassword')}
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirme sua senha"
                 label="Confirmar Senha"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                required
+                error={errors.confirmPassword?.message}
+                disabled={isLoading}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-9 text-slate-400 hover:text-slate-300"
+                disabled={isLoading}
               >
                 {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
 
+            <div className="relative">
+              <RetroInput
+                {...register('codigo_convite')}
+                type="text"
+                placeholder="Código de convite (opcional)"
+                label="Código de Convite (Opcional)"
+                error={errors.codigo_convite?.message}
+                disabled={isLoading}
+              />
+            </div>
+
             <div className="text-sm">
               <label className="flex items-start space-x-2 text-slate-400">
-                <input type="checkbox" className="rounded border-slate-600 bg-slate-800 mt-1" required />
+                <input 
+                  type="checkbox" 
+                  className="rounded border-slate-600 bg-slate-800 mt-1" 
+                  required 
+                  disabled={isLoading}
+                />
                 <span>
                   Eu concordo com os{" "}
                   <Link href="/terms" className="text-retro-blue hover:text-retro-neon transition-colors">
@@ -137,9 +176,18 @@ export default function RegisterPage() {
               </label>
             </div>
 
-            <RetroButton type="submit" className="w-full">
-              <UserPlus className="w-4 h-4 mr-2" />
-              Criar Conta
+            <RetroButton type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Criando conta...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Criar Conta
+                </>
+              )}
             </RetroButton>
           </form>
 

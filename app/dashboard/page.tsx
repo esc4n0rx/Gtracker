@@ -1,8 +1,11 @@
+// app/dashboard/page.tsx
 "use client"
 
+import { ProtectedRoute } from "@/components/auth/protected-route"
 import { Header } from "@/components/layout/header"
 import { ForumCard } from "@/components/ui/forum-card"
 import { RetroButton } from "@/components/ui/retro-button"
+import { useAuth } from "@/contexts/auth-context"
 import {
   FileText,
   Megaphone,
@@ -17,7 +20,9 @@ import {
   Activity,
 } from "lucide-react"
 
-export default function DashboardPage() {
+function DashboardContent() {
+  const { user } = useAuth()
+
   const forumSections = [
     {
       title: "Regras e Diretrizes",
@@ -92,8 +97,19 @@ export default function DashboardPage() {
         <div className="retro-panel p-6 bg-gradient-to-r from-retro-blue/20 to-retro-purple/20 border-retro-blue">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-retro-text mb-2">Bem-vindo ao GTracker! 🎮</h1>
+              <h1 className="text-3xl font-bold text-retro-text mb-2">
+                Bem-vindo, {user?.nome}! 🎮
+              </h1>
               <p className="text-slate-300">A nostalgia dos fóruns dos anos 2000 com tecnologia moderna</p>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-sm text-slate-400">Cargo:</span>
+                <span 
+                  className="px-2 py-1 text-xs rounded font-medium"
+                  style={{ backgroundColor: user?.role.color, color: '#000' }}
+                >
+                  {user?.role.display_name}
+                </span>
+              </div>
             </div>
             <div className="hidden md:block">
               <RetroButton>
@@ -122,7 +138,7 @@ export default function DashboardPage() {
 
               <div className="grid gap-4">
                 {forumSections.map((section, index) => (
-                  <ForumCard key={index} {...section} onClick={() => console.log(`Navigate to ${section.title}`)} />
+                  <ForumCard forum={section as any} key={index} {...section} onClick={() => console.log(`Navigate to ${section.title}`)} />
                 ))}
               </div>
             </div>
@@ -206,5 +222,13 @@ export default function DashboardPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <ProtectedRoute>
+      <DashboardContent />
+    </ProtectedRoute>
   )
 }
