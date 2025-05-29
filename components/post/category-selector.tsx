@@ -1,9 +1,8 @@
-// components/post/category-selector.tsx
 "use client"
 
 import { useState, useEffect } from 'react'
 import { Category, Forum } from '@/lib/api'
-import { ChevronDown, ChevronRight, Folder, FolderOpen } from 'lucide-react'
+import { ChevronDown, ChevronRight, Folder, FolderOpen, Check } from 'lucide-react'
 
 interface CategorySelectorProps {
   categories: Category[]
@@ -29,8 +28,19 @@ export function CategorySelector({
   useEffect(() => {
     if (selectedCategory) {
       setExpandedCategories(prev => new Set([...prev, selectedCategory]))
+      
+      // Auto-expandir fórum pai se um subfórum estiver selecionado
+      if (selectedForum) {
+        const category = categories.find(cat => cat.id === selectedCategory)
+        if (category) {
+          const selectedForumData = category.forums.find(f => f.id === selectedForum)
+          if (selectedForumData?.parent_forum_id) {
+            setExpandedForums(prev => new Set([...prev, selectedForumData.parent_forum_id!]))
+          }
+        }
+      }
     }
-  }, [selectedCategory])
+  }, [selectedCategory, selectedForum, categories])
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => {
@@ -56,14 +66,19 @@ export function CategorySelector({
     })
   }
 
-  const handleCategorySelect = (categoryId: string) => {
-    onCategoryChange(categoryId)
-    onForumChange('') // Reset forum selection
-  }
-
   const handleForumSelect = (forumId: string, categoryId: string) => {
     onCategoryChange(categoryId)
     onForumChange(forumId)
+  }
+
+  const getForumPath = (forum: Forum, category: Category): string => {
+    if (forum.parent_forum_id) {
+      const parentForum = category.forums.find(f => f.id === forum.parent_forum_id)
+      if (parentForum) {
+        return `${parentForum.name} > ${forum.name}`
+      }
+    }
+    return forum.name
   }
 
   if (isLoading) {
@@ -81,8 +96,25 @@ export function CategorySelector({
   return (
     <div className="space-y-2">
       <p className="text-sm text-slate-400 mb-4">
-        Selecione onde deseja postar seu conteúdo *
+        Selecione onde deseja postar seu conteúdo. Você pode escolher fóruns principais ou subfóruns específicos. *
       </p>
+
+      {/* Selected Forum Display */}
+      {selectedForum && (
+        <div className="mb-4 p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-green-400" />
+            <span className="text-green-400 font-medium">Selecionado:</span>
+          </div>
+          <div className="mt-1 text-sm text-slate-300">
+            {(() => {
+              const category = categories.find(cat => cat.id === selectedCategory)
+              const forum = category?.forums.find(f => f.id === selectedForum)
+              return forum && category ? `${category.name} > ${getForumPath(forum, category)}` : 'Fórum selecionado'
+            })()}
+          </div>
+        </div>
+      )}
 
       {categories.map(category => {
         const isExpanded = expandedCategories.has(category.id)
@@ -118,19 +150,19 @@ export function CategorySelector({
             {isExpanded && (
               <div className="bg-slate-900/50">
                 {mainForums.map(forum => {
-                  const hasSubforums = category.forums.some(f => f.parent_forum_id === forum.id)
-                  const isForumExpanded = expandedForums.has(forum.id)
                   const subforums = category.forums.filter(f => f.parent_forum_id === forum.id)
+                  const hasSubforums = subforums.length > 0
+                  const isForumExpanded = expandedForums.has(forum.id)
 
                   return (
                     <div key={forum.id}>
                       {/* Main Forum */}
-                      <div className="flex">
+                      <div className="flex border-t border-slate-600">
                         <button
                           type="button"
                           onClick={() => handleForumSelect(forum.id, category.id)}
                           className={`
-                            flex-1 p-3 text-left flex items-center gap-3 border-t border-slate-600
+                            flex-1 p-3 text-left flex items-center gap-3
                             hover:bg-slate-700/30 transition-colors
                             ${selectedForum === forum.id ? 'bg-retro-blue/10 text-retro-neon' : 'text-retro-text'}
                           `}
@@ -143,14 +175,16 @@ export function CategorySelector({
                             )}
                           </div>
                           <div className="flex-1">
-                            <div className="font-medium">{forum.name}</div>
+                            <div className="font-medium flex items-center gap-2">
+                              {forum.name}
+                              {selectedForum === forum.id && (
+                                <Check className="w-4 h-4 text-retro-neon" />
+                              )}
+                            </div>
                             {forum.description && (
                               <div className="text-xs text-slate-400 mt-1">{forum.description}</div>
                             )}
                           </div>
-                          {selectedForum === forum.id && (
-                            <div className="w-2 h-2 bg-retro-neon rounded-full"></div>
-                          )}
                         </button>
 
                         {/* Toggle Subforum Button */}
@@ -168,31 +202,35 @@ export function CategorySelector({
                       {/* Subforums */}
                       {hasSubforums && isForumExpanded && (
                         <div className="bg-slate-800/30">
-                          {subforums.map(subforum => (
-                            <button
-                              key={subforum.id}
-                              type="button"
-                              onClick={() => handleForumSelect(subforum.id, category.id)}
-                              className={`
-                                w-full p-3 text-left flex items-center gap-3 border-t border-slate-600
-                                hover:bg-slate-700/30 transition-colors ml-8
-                                ${selectedForum === subforum.id ? 'bg-retro-blue/10 text-retro-neon' : 'text-slate-300'}
-                              `}
-                            >
-                              <div className="w-4 h-4 bg-slate-600 rounded flex items-center justify-center">
-                                <Folder className="w-2 h-2 text-slate-400" />
-                              </div>
-                              <div className="flex-1">
-                                <div className="text-sm font-medium">↳ {subforum.name}</div>
-                                {subforum.description && (
-                                  <div className="text-xs text-slate-400 mt-1">{subforum.description}</div>
-                                )}
-                              </div>
-                              {selectedForum === subforum.id && (
-                                <div className="w-2 h-2 bg-retro-neon rounded-full"></div>
-                              )}
-                            </button>
-                          ))}
+                          {subforums
+                            .sort((a, b) => a.display_order - b.display_order)
+                            .map(subforum => (
+                              <button
+                                key={subforum.id}
+                                type="button"
+                                onClick={() => handleForumSelect(subforum.id, category.id)}
+                                className={`
+                                  w-full p-3 text-left flex items-center gap-3 border-t border-slate-600
+                                  hover:bg-slate-700/30 transition-colors ml-8
+                                  ${selectedForum === subforum.id ? 'bg-retro-blue/10 text-retro-neon' : 'text-slate-300'}
+                                `}
+                              >
+                                <div className="w-4 h-4 bg-slate-600 rounded flex items-center justify-center">
+                                  <Folder className="w-2 h-2 text-slate-400" />
+                                </div>
+                                <div className="flex-1">
+                                  <div className="text-sm font-medium flex items-center gap-2">
+                                    ↳ {subforum.name}
+                                    {selectedForum === subforum.id && (
+                                      <Check className="w-4 h-4 text-retro-neon" />
+                                    )}
+                                  </div>
+                                  {subforum.description && (
+                                    <div className="text-xs text-slate-400 mt-1">{subforum.description}</div>
+                                  )}
+                                </div>
+                              </button>
+                            ))}
                         </div>
                       )}
                     </div>

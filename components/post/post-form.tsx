@@ -1,4 +1,3 @@
-// components/post/post-form.tsx
 "use client"
 
 import { useState, useEffect } from 'react'
@@ -55,8 +54,17 @@ export function PostForm() {
       return
     }
 
+    const selectedForum = categories
+      .flatMap(cat => cat.forums)
+      .find(forum => forum.id === formData.forum_id)
+    
+    if (!selectedForum) {
+      error('Erro de validação', 'Fórum selecionado é inválido')
+      return
+    }
+
     try {
-      // Preparar dados para envio
+
       const postData = {
         title: formData.title.trim(),
         content: formData.content.trim() || undefined,
@@ -65,25 +73,22 @@ export function PostForm() {
         template_data: {} as Record<string, any>
       }
 
-      // Combinar template_data com dados do TMDB
+
       if (Object.keys(formData.template_data).length > 0) {
         postData.template_data = { ...formData.template_data }
       }
 
-      // Adicionar dados do TMDB se disponível
       if (tmdbData) {
-        // Para filmes e séries, adicionar dados específicos do TMDB
+
         if (formData.post_type === 'filme' || formData.post_type === 'série') {
           postData.template_data = {
             ...postData.template_data,
             tmdb_id: tmdbData.id?.toString(),
             titulo_personalizado: tmdbData.title || postData.title,
-            // Outros campos serão preenchidos pelo TemplateForm
           }
         }
       }
 
-      // Debug: mostrar dados que serão enviados
       console.log('Dados do post a serem enviados:', postData)
 
       const newPost = await createPost(postData)
@@ -94,13 +99,11 @@ export function PostForm() {
       }, 1500)
     } catch (err) {
       console.error('Erro no submit:', err)
-      // Erro já tratado no hook
     }
   }
 
   const handleTmdbDataReceived = (data: any) => {
     setTmdbData(data)
-    // Auto-preencher título se estiver vazio
     if (!formData.title && data?.title) {
       setFormData(prev => ({
         ...prev,
@@ -115,9 +118,9 @@ export function PostForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Form */}
+
         <div className="lg:col-span-2 space-y-6">
-          {/* Basic Info */}
+
           <div className="retro-panel p-6">
             <h3 className="text-lg font-bold text-retro-text mb-4">Informações Básicas</h3>
             
@@ -144,7 +147,6 @@ export function PostForm() {
             </div>
           </div>
 
-          {/* Category and Forum Selection */}
           <div className="retro-panel p-6">
             <h3 className="text-lg font-bold text-retro-text mb-4">Localização do Post</h3>
             
@@ -161,7 +163,6 @@ export function PostForm() {
             />
           </div>
 
-          {/* Post Type Selection */}
           <div className="retro-panel p-6">
             <h3 className="text-lg font-bold text-retro-text mb-4">Tipo de Conteúdo</h3>
             
@@ -172,14 +173,13 @@ export function PostForm() {
                 setFormData(prev => ({ 
                   ...prev, 
                   post_type: type,
-                  template_data: {} // Reset template data quando muda o tipo
+                  template_data: {}
                 }))
-                setTmdbData(null) // Reset TMDB data
+                setTmdbData(null) 
               }}
             />
           </div>
 
-          {/* TMDB Search (apenas para filmes e séries) */}
           {requiresTmdb && (
             <div className="retro-panel p-6">
               <h3 className="text-lg font-bold text-retro-text mb-4">
@@ -194,7 +194,6 @@ export function PostForm() {
             </div>
           )}
 
-          {/* Template Form */}
           {selectedTemplate && (
             <div className="retro-panel p-6">
               <h3 className="text-lg font-bold text-retro-text mb-4">
@@ -210,7 +209,6 @@ export function PostForm() {
             </div>
           )}
 
-          {/* Submit Buttons */}
           <div className="retro-panel p-6">
             <div className="flex items-center justify-between">
               <RetroButton
@@ -242,9 +240,7 @@ export function PostForm() {
           </div>
         </div>
 
-        {/* Sidebar - Preview e Dicas */}
         <div className="space-y-6">
-          {/* Preview */}
           {showPreview && (
             <div className="retro-panel p-6">
               <h3 className="text-lg font-bold text-retro-text mb-4">Preview</h3>
@@ -294,7 +290,6 @@ export function PostForm() {
             </div>
           )}
 
-          {/* Tips */}
           <div className="retro-panel p-6">
             <h3 className="text-lg font-bold text-retro-text mb-4">Dicas</h3>
             <div className="space-y-2 text-sm text-slate-400">

@@ -369,4 +369,4 @@ export const postsApi = {
   }
 }
 
-export { ApiError }
+export { ApiError, apiRequest }
