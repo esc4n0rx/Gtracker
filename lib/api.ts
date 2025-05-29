@@ -370,3 +370,181 @@ export const postsApi = {
 }
 
 export { ApiError, apiRequest }
+
+
+// API para Mensagens Privadas (HTTP)
+export const messagesApi = {
+  getConversations: async (page = 1, limit = 20): Promise<ApiResponse<{ //
+    conversations: Array<{
+      id: string; // ID da conversa (pode não vir, backend pode usar other_user.id como chave)
+      other_user: {
+        id: string;
+        nickname: string;
+        nome: string;
+        gtracker_profiles: { // Do chat.json, mas pode ser gtracker_roles para cor/avatar
+          avatar_url: string | null;
+        };
+      };
+      last_message: {
+        id: string;
+        content: string;
+        created_at: string; // ISO_DATE
+        sender_id: string;
+      };
+      last_message_at: string; // ISO_DATE
+      unread_count?: number; // Adicionar se o backend enviar
+    }>;
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }>> => {
+    return apiRequest(`/messages/conversations?page=${page}&limit=${limit}`);
+  },
+
+  getConversationMessages: async (otherUserId: string, page = 1, limit = 50): Promise<ApiResponse<{ //
+    messages: Array<{
+      id: string;
+      content: string;
+      is_read: boolean;
+      read_at: string | null; // ISO_DATE
+      reply_to: string | null;
+      created_at: string; // ISO_DATE
+      sender: {
+        id: string;
+        nickname: string;
+        nome: string;
+        gtracker_profiles: { // Do chat.json
+          avatar_url: string | null;
+        };
+      };
+      recipient: { // Do chat.json
+        id: string;
+        nickname: string;
+        nome: string;
+      };
+    }>;
+    pagination: any; // Definir melhor a paginação se necessário
+  }>> => {
+    return apiRequest(`/messages/conversations/${otherUserId}?page=${page}&limit=${limit}`);
+  },
+
+  sendMessage: async (recipientId: string, content: string, replyTo?: string | null): Promise<ApiResponse<{ //
+    id: string;
+    content: string;
+    created_at: string; // ISO_DATE
+    sender: any; // Definir melhor o tipo do sender se necessário
+  }>> => {
+    return apiRequest('/messages', {
+      method: 'POST',
+      body: JSON.stringify({ recipient_id: recipientId, content, reply_to: replyTo || null }),
+    });
+  },
+
+  markMessageAsRead: async (messageId: string): Promise<ApiResponse<{ //
+    id: string;
+    is_read: boolean;
+    read_at: string; // ISO_DATE
+  }>> => {
+    return apiRequest(`/messages/${messageId}/read`, {
+      method: 'PATCH',
+    });
+  },
+
+  markConversationAsRead: async (otherUserId: string): Promise<ApiResponse<null>> => { //
+    return apiRequest(`/messages/conversations/${otherUserId}/read`, {
+      method: 'PATCH',
+    });
+  },
+
+  getUnreadCount: async (): Promise<ApiResponse<{ unread_count: number }>> => { //
+    return apiRequest('/messages/unread-count');
+  },
+};
+
+// API para Notificações (HTTP) - Estrutura básica baseada em notifications.json
+export const notificationsApi = {
+  getNotifications: async (page = 1, limit = 20, unreadOnly = false): Promise<ApiResponse<{ //
+    notifications: Array<{
+      id: string;
+      type: string;
+      title: string;
+      message: string;
+      action_url: string | null;
+      is_read: boolean;
+      created_at: string; // ISO_DATE
+      related_user?: { id: string; nickname: string; nome: string };
+      related_post?: { id: string; title: string; slug: string };
+      // ... outros campos related_... e metadata
+    }>;
+    pagination: any;
+  }>> => {
+    return apiRequest(`/notifications?page=${page}&limit=${limit}&unread_only=${unreadOnly}`);
+  },
+
+  getUnreadCount: async (): Promise<ApiResponse<{ unread_count: number }>> => { //
+    return apiRequest('/notifications/unread-count');
+  },
+
+  markAsRead: async (notificationId: string): Promise<ApiResponse<{ id: string; is_read: boolean }>> => { //
+    return apiRequest(`/notifications/${notificationId}/read`, {
+      method: 'PATCH',
+    });
+  },
+
+  markAllAsRead: async (): Promise<ApiResponse<null>> => { //
+    return apiRequest('/notifications/mark-all-read', {
+      method: 'PATCH',
+    });
+  },
+  
+  // getSettings e updateSettings podem ser adicionados depois se necessário
+};
+
+
+// API para Mensagens Privadas (HTTP) - Estrutura básica 
+export const privateChatApi = {
+  // Endpoint para buscar todos os usuários para o dropdown
+  getUsers: async (): Promise<ApiResponse<User[]>> => { // Retorna uma lista de usuários
+    return apiRequest<User[]>('/private/getusers'); // Ajustar endpoint conforme sua definição
+  },
+
+  // Endpoint para enviar uma mensagem privada
+  sendMessage: async (recipientId: string, content: string): Promise<ApiResponse<any>> => { // O 'any' pode ser a mensagem enviada
+    return apiRequest('/private/send', {
+      method: 'POST',
+      body: JSON.stringify({ recipient_id: recipientId, content }),
+    });
+  },
+
+  // Endpoint para receber mensagens de uma conversa
+  // Vamos assumir que otherUserId é o ID do usuário com quem a conversa está acontecendo
+  // 'since' pode ser um timestamp ou ID da última mensagem recebida para paginação/atualização
+  getConversationMessages: async (otherUserId: string, since?: string): Promise<ApiResponse<any[]>> => { // Retorna um array de mensagens
+    let url = `/private/receive/${otherUserId}`; // Ajustar endpoint e parâmetros conforme sua definição
+    if (since) {
+      url += `?since=${since}`;
+    }
+    return apiRequest<any[]>(url);
+  },
+
+  // Endpoint para marcar mensagens como lidas (exemplo)
+  // Pode ser um array de IDs ou um ID de conversa e um timestamp "até aqui"
+  markMessagesAsRead: async (messageIds: string[] | string, conversationWith?: string): Promise<ApiResponse<any>> => {
+    // A lógica exata dependerá de como o backend espera isso
+    if (Array.isArray(messageIds)) {
+      return apiRequest('/private/mark-read', { // Endpoint hipotético
+        method: 'POST',
+        body: JSON.stringify({ message_ids: messageIds }),
+      });
+    } else if (conversationWith) {
+        return apiRequest(`/private/mark-conversation-read/${conversationWith}`, { // Endpoint hipotético
+             method: 'POST',
+             body: JSON.stringify({ last_message_id: messageIds }) // ou um timestamp
+        });
+    }
+    throw new Error("Parâmetros inválidos para markMessagesAsRead");
+  }
+};

@@ -2,11 +2,12 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { AuthProvider } from "@/contexts/auth-context"
-import { ToastContainer } from "@/components/ui/toast"
-import { ProfileProvider } from "@/contexts/profile-context"
+import "./globals.css" //
+import { ThemeProvider } from "@/components/theme-provider" //
+import { AuthProvider } from "@/contexts/auth-context" //
+import { ToastContainer } from "@/components/ui/toast" //
+import { ProfileProvider } from "@/contexts/profile-context" //
+import { RealtimeProvider } from "@/contexts/realtime-context" // Importar o novo provider
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -27,8 +28,10 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange={false}>
           <AuthProvider>
             <ProfileProvider>
-              {children}
-              <ToastContainer />
+              <RealtimeProvider>
+                {children}
+                <ToastContainer />
+              </RealtimeProvider>
             </ProfileProvider>
           </AuthProvider>
         </ThemeProvider>

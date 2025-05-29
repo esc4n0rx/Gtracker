@@ -1,9 +1,9 @@
 // components/ui/toast.tsx
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react' // Adicionado useCallback
 import { X, CheckCircle, AlertCircle, Info } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils' //
 
 export interface Toast {
   id: string
@@ -64,31 +64,31 @@ export function ToastComponent({ id, type, title, message, duration = 5000, onRe
 export function useToast() {
   const [toasts, setToasts] = useState<Toast[]>([])
 
-  const addToast = (toast: Omit<Toast, 'id'>) => {
+  const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
     const id = Math.random().toString(36).substr(2, 9)
     setToasts(prev => [...prev, { ...toast, id }])
-  }
+  }, []) // setToasts é estável, então addToast é estável
 
-  const removeToast = (id: string) => {
+  const removeToast = useCallback((id: string) => {
     setToasts(prev => prev.filter(toast => toast.id !== id))
-  }
+  }, []) // setToasts é estável, então removeToast é estável
 
-  const success = (title: string, message?: string) => {
+  const success = useCallback((title: string, message?: string) => {
     addToast({ type: 'success', title, message })
-  }
+  }, [addToast])
 
-  const error = (title: string, message?: string) => {
+  const error = useCallback((title: string, message?: string) => {
     addToast({ type: 'error', title, message })
-  }
+  }, [addToast])
 
-  const info = (title: string, message?: string) => {
+  const info = useCallback((title: string, message?: string) => {
     addToast({ type: 'info', title, message })
-  }
+  }, [addToast])
 
   return {
     toasts,
-    addToast,
-    removeToast,
+    addToast, // Pode ser exposto se necessário em outros lugares
+    removeToast, // Pode ser exposto se necessário
     success,
     error,
     info,
