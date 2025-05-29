@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useToast } from '@/components/ui/toast'
 import { RetroButton } from '@/components/ui/retro-button'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import { RetroInput } from '@/components/ui/retro-input'
 import { apiRequest } from '@/lib/api'
 import { formatRelativeTime } from '@/lib/forum-utils'
@@ -287,9 +288,12 @@ function CommentItem({
         {/* Comment Header */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-retro-blue to-retro-purple rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-white" />
-            </div>
+            <UserAvatar 
+              userId={comment.author.id}
+              nickname={comment.author.nickname}
+              size="sm"
+              showStatus={false}
+            />
             <div>
               <div className="font-medium text-retro-text">{comment.author.nickname}</div>
               <div className="flex items-center gap-1 text-xs text-slate-400">
@@ -299,7 +303,6 @@ function CommentItem({
             </div>
           </div>
         </div>
-
         {/* Comment Content */}
         <div className="text-slate-300 mb-3 whitespace-pre-line">
           {comment.content}

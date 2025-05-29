@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { RetroLogo } from "@/components/ui/retro-logo"
 import { RetroButton } from "@/components/ui/retro-button"
 import { useAuth } from "@/contexts/auth-context"
+import { UserAvatar } from '@/components/ui/user-avatar'
 import {
   Home,
   MessageSquare,
@@ -39,14 +40,14 @@ export function Header() {
   const { user, logout } = useAuth()
   const canPost = user?.role?.name !== 'member' && user?.role?.name !== 'banned'
 
- const navItems = [
-  { label: "Portal", href: "/dashboard", icon: Home },
-  { label: "Fórum", href: "/forum", icon: MessageSquare },
-  { label: "Regras", href: "/rules", icon: FileText },
-  ...(canPost ? [{ label: "Postador", href: "/post/new", icon: Upload }] : []),
-  { label: "Doação", href: "/donate", icon: Heart },
-  { label: "Chat", href: "/chat", icon: MessageCircle },
-]
+  const navItems = [
+    { label: "Portal", href: "/dashboard", icon: Home },
+    { label: "Fórum", href: "/forum", icon: MessageSquare },
+    { label: "Regras", href: "/rules", icon: FileText },
+    ...(canPost ? [{ label: "Postador", href: "/post/new", icon: Upload }] : []),
+    { label: "Doação", href: "/donate", icon: Heart },
+    { label: "Chat", href: "/chat", icon: MessageCircle },
+  ]
 
   const handleLogout = () => {
     logout()
@@ -95,6 +96,7 @@ export function Header() {
                 </span>
               )}
             </button>
+
             {/* Mobile Menu Button */}
             <button
               className="lg:hidden p-2 text-slate-400 hover:text-retro-neon transition-colors"
@@ -105,37 +107,47 @@ export function Header() {
 
             {/* User Menu */}
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+             <DropdownMenuTrigger asChild>
                 <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-slate-700 transition-colors">
-                  <div className="w-8 h-8 bg-gradient-to-br from-retro-blue to-retro-purple rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 text-white" />
-                  </div>
+                  <UserAvatar 
+                    userId={user?.id}
+                    nickname={user?.nickname}
+                    size="sm"
+                    showStatus={true}
+                  />
                   <span className="hidden md:block text-sm font-medium text-retro-text">
                     {user?.nickname || 'Usuário'}
                   </span>
                   <ChevronDown className="w-4 h-4 text-slate-400" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 retro-panel border-slate-600">
+              <DropdownMenuContent 
+                align="end" 
+                className="w-56 retro-panel border-slate-600 bg-slate-800 text-retro-text"
+              >
                 <div className="px-3 py-2 border-b border-slate-600">
                   <p className="text-sm font-medium text-retro-text">{user?.nome}</p>
                   <p className="text-xs text-slate-400">{user?.email}</p>
-                  <span className="inline-block mt-1 px-2 py-0.5 text-xs rounded" 
-                        style={{ backgroundColor: user?.role.color, color: '#000' }}>
+                  <span 
+                    className="inline-block mt-1 px-2 py-0.5 text-xs rounded" 
+                    style={{ backgroundColor: user?.role.color, color: '#000' }}
+                  >
                     {user?.role.display_name}
                   </span>
                 </div>
-                <DropdownMenuItem className="text-retro-text hover:bg-slate-700">
-                  <User className="w-4 h-4 mr-2" />
-                  Meu Perfil
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-retro-text hover:bg-slate-700">
+                <Link href="/profile">
+                  <DropdownMenuItem className="text-retro-text hover:bg-slate-700 cursor-pointer">
+                    <User className="w-4 h-4 mr-2" />
+                    Meu Perfil
+                  </DropdownMenuItem>
+                </Link>
+                <DropdownMenuItem className="text-retro-text hover:bg-slate-700 cursor-pointer">
                   <Settings className="w-4 h-4 mr-2" />
                   Configurações
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-slate-600" />
                 <DropdownMenuItem 
-                  className="text-red-400 hover:bg-red-900/20" 
+                  className="text-red-400 hover:bg-red-900/20 cursor-pointer" 
                   onClick={handleLogout}
                 >
                   <LogOut className="w-4 h-4 mr-2" />

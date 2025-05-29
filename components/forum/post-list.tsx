@@ -3,6 +3,7 @@
 
 import Link from 'next/link'
 import { Post } from '@/lib/api'
+import { PostAuthor } from './post-author'
 import { formatRelativeTime } from '@/lib/forum-utils'
 import { 
   MessageSquare, 
@@ -126,23 +127,20 @@ function PostItem({ post }: { post: Post }) {
 
             {/* Post Meta */}
             <div className="flex items-center gap-4 text-sm text-slate-400 mb-3">
-              <div className="flex items-center gap-1">
-                <User className="w-3 h-3" />
-                <span className="text-retro-blue">{post.author.nickname}</span>
-              </div>
-              
-              <div className="flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                <span>{formatRelativeTime(post.created_at)}</span>
-              </div>
+                  <PostAuthor author={post.author} showExtended={true} />
+                  
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    <span>{formatRelativeTime(post.created_at)}</span>
+                  </div>
 
-              <span className={`
-                px-2 py-0.5 text-xs rounded-full text-white
-                ${getPostTypeColor(post.post_type)}
-              `}>
-                {getPostTypeLabel(post.post_type)}
-              </span>
-            </div>
+                  <span className={`
+                    px-2 py-0.5 text-xs rounded-full text-white
+                    ${getPostTypeColor(post.post_type)}
+                  `}>
+                    {getPostTypeLabel(post.post_type)}
+                  </span>
+                </div>
 
             {/* Post Stats */}
             <div className="flex items-center gap-6 text-xs text-slate-500">

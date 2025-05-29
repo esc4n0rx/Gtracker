@@ -31,6 +31,7 @@ import {
   RefreshCw
 } from "lucide-react"
 import Link from "next/link"
+import { UserInfo } from "@/components/ui/user-info"
 
 function PostDetailContent() {
   const params = useParams()
@@ -279,20 +280,14 @@ function PostDetailContent() {
          <div className="space-y-6">
            {/* Author Info */}
            <div className="retro-panel p-6">
-             <h3 className="text-lg font-bold text-retro-text mb-4">Autor</h3>
-             <div className="text-center">
-               <div className="w-16 h-16 bg-gradient-to-br from-retro-blue to-retro-purple rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-3">
-                 {post.author.nickname.charAt(0).toUpperCase()}
-               </div>
-               <div className="font-bold text-retro-text text-lg">{post.author.nickname}</div>
-               <div className="text-xs text-slate-400 mt-2">
-                 Membro desde sempre
-               </div>
-               <div className="text-xs text-slate-400 mt-1">
-                 Post criado em {new Date(post.created_at).toLocaleDateString('pt-BR')}
-               </div>
-             </div>
-           </div>
+            <h3 className="text-lg font-bold text-retro-text mb-4">Autor</h3>
+            <UserInfo
+              author={post.author}
+              showExtended={true}
+              showSignature={true}
+              showStats={true}
+            />
+          </div>
 
            {/* Post Stats */}
            <div className="retro-panel p-6">

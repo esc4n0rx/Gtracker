@@ -6,6 +6,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/contexts/auth-context"
 import { ToastContainer } from "@/components/ui/toast"
+import { ProfileProvider } from "@/contexts/profile-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -25,8 +26,10 @@ export default function RootLayout({
       <body className={`${inter.className} bg-retro-dark text-retro-text antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange={false}>
           <AuthProvider>
-            {children}
-            <ToastContainer />
+            <ProfileProvider>
+              {children}
+              <ToastContainer />
+            </ProfileProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

@@ -143,3 +143,71 @@
     background: linear-gradient(to bottom, transparent, #475569, transparent);
   }
 }
+
+/* Scrollbar customizada para areas de texto */
+.pretty-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.pretty-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #4A5568;
+  border-radius: 4px;
+}
+
+.pretty-scrollbar::-webkit-scrollbar-track {
+  background-color: #2D3748;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.status-online { @apply bg-green-500; }
+.status-away { @apply bg-yellow-500; }
+.status-busy { @apply bg-red-500; }
+.status-invisible { @apply bg-gray-500; }
+.status-offline { @apply bg-gray-500; }
+
+/* Color picker melhorado */
+input[type="color"] {
+  -webkit-appearance: none;
+  border: none;
+  cursor: pointer;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 6px;
+}
+
+/* Dropdown menu específico */
+.dropdown-content {
+  background-color: rgb(30 41 59 / 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgb(71 85 105);
+}
+
+/* Melhorar o tema dos dropdowns */
+[data-radix-popper-content-wrapper] {
+  z-index: 50 !important;
+}
+
+/* Garantir que os portals funcionem */
+[data-radix-portal] {
+  z-index: 999999;
+}
