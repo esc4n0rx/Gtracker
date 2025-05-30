@@ -1,5 +1,5 @@
 // lib/api.ts
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://nckgcgkssowk8soo4wgoc0k4.195.35.17.111.sslip.io/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.gtracker.space/api'
 
 export interface ApiResponse<T = any> {
   success: boolean

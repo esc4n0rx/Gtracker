@@ -2,7 +2,7 @@
 import { io, Socket } from "socket.io-client";
 // getStoredToken já está em lib/api.ts, mas não é usado diretamente aqui, é usado na página ao chamar connect.
 
-const CHAT_SERVER_URL = "ws://nckgcgkssowk8soo4wgoc0k4.195.35.17.111.sslip.io";
+const CHAT_SERVER_URL = "ws://api.gtracker.space";
 
 // --- INTERFACES DE PAYLOAD DE EVENTOS (já definidas anteriormente, verificar e adicionar as de msg privada) ---
 
