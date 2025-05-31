@@ -34,6 +34,18 @@ export interface User {
     color: string
     permissions: Record<string, any>
   }
+  // Adicionar campos de level
+  total_xp?: number
+  current_level?: number
+  level_info?: {
+    level_number: number
+    name: string
+    min_xp: number
+    max_xp: number | null
+    emoji: string
+    color: string
+    is_legendary: boolean
+  }
 }
 
 export interface LoginResponse {
@@ -548,3 +560,107 @@ export const privateChatApi = {
     throw new Error("Parâmetros inválidos para markMessagesAsRead");
   }
 };
+
+export interface Level {
+  id: number
+  level_number: number
+  name: string
+  min_xp: number
+  max_xp: number | null
+  is_legendary: boolean
+  emoji: string
+  color: string
+  created_at: string
+}
+
+export interface LevelProgress {
+  current_level: number
+  level_name: string
+  xp_to_next: number
+  percentage: number
+}
+
+export interface UserLevel {
+  total_xp: number
+  current_level: number
+  level_details: Level
+  progress: LevelProgress
+}
+
+export interface RankingUser {
+  position: number
+  id: string
+  nickname: string
+  nome: string
+  total_xp: number
+  current_level: number
+  level_info: {
+    name: string
+    emoji: string
+    color: string
+  }
+  avatar_url?: string
+}
+
+export interface XPAwardData {
+  user_id: string
+  xp_amount: number
+  reason: string
+}
+
+export interface XPAwardResult {
+  old_xp: number
+  new_xp: number
+  xp_gained: number
+  old_level: number
+  new_level: number
+  level_up: boolean
+  level_progress: LevelProgress
+}
+
+// APIs do sistema de levels
+export const levelsApi = {
+  // Obter nível do usuário atual
+  getMyLevel: async (): Promise<UserLevel> => {
+    const response = await apiRequest<UserLevel>('/levels/my-level')
+    return response.data!
+  },
+
+  // Obter nível de um usuário específico
+  getUserLevel: async (userId: string): Promise<UserLevel> => {
+    const response = await apiRequest<UserLevel>(`/levels/user/${userId}`)
+    return response.data!
+  },
+
+  // Obter ranking de XP
+  getRanking: async (page = 1, limit = 10): Promise<{
+    ranking: RankingUser[]
+    pagination: {
+      page: number
+      limit: number
+      total: number
+      totalPages: number
+    }
+  }> => {
+    const response = await apiRequest<{
+      ranking: RankingUser[]
+      pagination: any
+    }>(`/levels/ranking?page=${page}&limit=${limit}`)
+    return response.data!
+  },
+
+  // Obter todos os níveis disponíveis
+  getAllLevels: async (): Promise<Level[]> => {
+    const response = await apiRequest<Level[]>('/levels/all')
+    return response.data!
+  },
+
+  // Dar XP manualmente (apenas admins)
+  awardXP: async (data: XPAwardData): Promise<XPAwardResult> => {
+    const response = await apiRequest<XPAwardResult>('/levels/award-xp', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+    return response.data!
+  },
+}

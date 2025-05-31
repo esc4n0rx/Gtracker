@@ -13,6 +13,8 @@ interface AuthContextType {
   logout: () => void
 }
 
+
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 interface AuthProviderProps {

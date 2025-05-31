@@ -24,6 +24,26 @@ interface NewNotificationPayload { //
   // metadata?: any; // Se o backend enviar
 }
 
+interface LevelUpNotificationPayload {
+ type: 'level_up'
+ title: string
+ message: string
+ data: {
+   old_level: number
+   new_level: number
+   old_xp: number
+   new_xp: number
+   xp_gained: number
+   level_up: boolean
+   level_progress: {
+     current_level: number
+     level_name: string
+     xp_to_next: number
+     percentage: number
+   }
+ }
+}
+
 interface RealtimeContextType {
   socket: Socket | null;
   isConnected: boolean;
@@ -47,6 +67,17 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const { info, error: showErrorToast } = useToast(); //
+  const handleLevelUpNotification = useCallback((payload: LevelUpNotificationPayload) => {
+ console.log("RealtimeProvider: Usuário subiu de nível!", payload);
+ 
+  // Mostrar notificação especial para level up
+  info(
+    `${payload.title} - ${payload.message}`
+  );
+  
+  // Atualizar contagem se necessário (o level up pode vir junto com outras notificações)
+  setUnreadNotificationsCount(prev => prev + 1);
+  }, [info]);
 
   const fetchInitialCounts = useCallback(async () => {
     if (isAuthenticated) {

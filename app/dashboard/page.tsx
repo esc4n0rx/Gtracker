@@ -4,8 +4,12 @@
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { Header } from "@/components/layout/header"
 import { ForumCard } from "@/components/ui/forum-card"
+import { Trophy } from 'lucide-react'
 import { RetroButton } from "@/components/ui/retro-button"
 import { useAuth } from "@/contexts/auth-context"
+import { useLevels } from '@/hooks/use-levels'
+import { XPProgressBar } from '@/components/ui/xp-progress-bar'
+import { LevelBadge } from '@/components/ui/level-badge'
 import {
   FileText,
   Megaphone,
@@ -19,9 +23,19 @@ import {
   ChevronRight,
   Activity,
 } from "lucide-react"
+import Link from "next/link"
+import { useEffect } from "react"
 
 function DashboardContent() {
   const { user } = useAuth()
+  const { myLevel, fetchMyLevel } = useLevels()
+
+
+  useEffect(() => {
+  if (user) {
+    fetchMyLevel()
+  }
+}, [user, fetchMyLevel])
 
   const forumSections = [
     {
@@ -165,36 +179,43 @@ function DashboardContent() {
               </div>
             </div>
 
-            {/* Top Uploaders */}
-            <div className="retro-panel p-6">
-              <h3 className="text-lg font-bold text-retro-text mb-4 flex items-center gap-2">
-                <Star className="w-5 h-5 text-retro-blue" />
-                Top Uploaders
-              </h3>
-              <div className="space-y-3">
-                {topUploaders.map((uploader, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                          uploader.rank === 1
-                            ? "bg-yellow-500 text-black"
-                            : uploader.rank === 2
-                              ? "bg-gray-400 text-black"
-                              : uploader.rank === 3
-                                ? "bg-orange-600 text-white"
-                                : "bg-slate-600 text-white"
-                        }`}
-                      >
-                        {uploader.rank}
+           <Link href="/ranking" className="block">
+            <RetroButton size="sm" className="w-full">
+              <Trophy className="w-4 h-4 mr-2" />
+              Ver Ranking
+            </RetroButton>
+          </Link>
+
+          {myLevel && (
+              <div className="retro-panel p-6">
+                <h3 className="text-lg font-bold text-retro-text mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-retro-blue" />
+                  Seu Progresso
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <LevelBadge level={myLevel.level_details} showName size="lg" />
+                    <div className="text-right">
+                      <div className="text-sm text-slate-400">Total XP</div>
+                      <div className="font-bold text-retro-text">
+                        {myLevel.total_xp.toLocaleString('pt-BR')}
                       </div>
-                      <span className="text-retro-text font-medium">{uploader.name}</span>
                     </div>
-                    <span className="text-sm text-slate-400">{uploader.uploads}</span>
                   </div>
-                ))}
+                  <XPProgressBar 
+                    progress={myLevel.progress} 
+                    totalXP={myLevel.total_xp}
+                    showDetails={true}
+                  />
+                  <Link href="/ranking" className="block">
+                    <RetroButton size="sm" className="w-full">
+                      <Trophy className="w-4 h-4 mr-2" />
+                      Ver Ranking Completo
+                    </RetroButton>
+                  </Link>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Quick Stats */}
             <div className="retro-panel p-6">
