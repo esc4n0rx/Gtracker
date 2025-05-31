@@ -1,10 +1,10 @@
-// lib/chat.ts
+
 import { io, Socket } from "socket.io-client";
-// getStoredToken já está em lib/api.ts, mas não é usado diretamente aqui, é usado na página ao chamar connect.
 
-const CHAT_SERVER_URL = "ws://api.gtracker.space";
 
-// --- INTERFACES DE PAYLOAD DE EVENTOS (já definidas anteriormente, verificar e adicionar as de msg privada) ---
+const CHAT_SERVER_URL = "ws://https://api.gtracker.space";
+
+// --- INTERFACES DE PAYLOAD DE EVENTOS  ---
 
 // Payload para new_private_message
 export interface NewPrivateMessagePayload {
@@ -16,49 +16,41 @@ export interface NewPrivateMessagePayload {
     id: string;
     nickname: string;
     nome: string;
-    gtracker_profiles: { // Supondo que roles/avatar venham daqui ou de um get_user_profile
+    gtracker_profiles: { 
       avatar_url: string | null;
     };
   };
-  // Se o backend enviar recipient_id também, adicionar aqui. Pelo chat.json, não envia.
 }
 
-// Payload para private_message_sent
 export interface PrivateMessageSentPayload {
   id: string;
   content: string;
-  created_at: string; // ISO_DATE
+  created_at: string;
   recipient_id: string;
 }
 
-// Payload para message_marked_read
 export interface MessageMarkedReadPayload {
     message_id: string;
 }
 
-// Payload para message_read (alguém leu sua mensagem)
 export interface MessageReadPayload {
     message_id: string;
-    read_by: string; // uuid do usuário que leu
+    read_by: string;
 }
 
-// Payload para conversation_marked_read
 export interface ConversationMarkedReadPayload {
     other_user_id: string;
 }
 
-
 // --- FIM DAS INTERFACES DE PAYLOAD ---
 
-
-// Reutilizando de antes, ajustar se necessário
 export interface ChatMessageEventPayload {
   id: string
   content: string
   message_type: "text" | "system" | "join" | "leave"
   mentions?: string[]
   reply_to?: string | null
-  created_at: string // ISO_DATE
+  created_at: string 
   author: {
     id: string
     nickname: string
@@ -118,13 +110,13 @@ interface ChatEventMap {
   user_left: (data: UserEventPayload) => void;
   user_typing: (data: { user: { id: string; nickname: string }; typing: boolean }) => void;
   user_status_changed: (data: { user_id: string; status: "online" | "away" | "busy" | "offline" }) => void;
-  new_private_message: (message: NewPrivateMessagePayload) => void; // Novo
+  new_private_message: (message: NewPrivateMessagePayload) => void; 
   new_notification?: (notification: NewNotificationPayload) => void;
-  private_message_sent: (message: PrivateMessageSentPayload) => void; // Novo
-  message_marked_read: (data: MessageMarkedReadPayload) => void; // Novo
-  message_read: (data: MessageReadPayload) => void; // Novo
-  conversation_marked_read: (data: ConversationMarkedReadPayload) => void; // Novo
-  server_error: (data: { message: string }) => void; // Evento 'error' do chat.json
+  private_message_sent: (message: PrivateMessageSentPayload) => void;
+  message_marked_read: (data: MessageMarkedReadPayload) => void; 
+  message_read: (data: MessageReadPayload) => void; 
+  conversation_marked_read: (data: ConversationMarkedReadPayload) => void; 
+  server_error: (data: { message: string }) => void; 
   pong: () => void; //
 }
 
@@ -148,16 +140,13 @@ export const chatService = {
 
     if (handlers.connect) newSocket.on("connect", handlers.connect);
     if (handlers.disconnect) newSocket.on("disconnect", handlers.disconnect);
-    // O evento 'error' do socket.io é para erros de transporte/conexão.
-    // O evento 'error' definido no chat.json (payload: {message: string}) é um evento customizado do servidor.
+    
     newSocket.on("connect_error", (err) => {
         console.error("ChatService: Erro de conexão Connect_Error -", err);
-        handlers.error?.(err); // Para erros de baixo nível do socket.io
+        handlers.error?.(err); 
     });
-    if (handlers.server_error) newSocket.on("error", handlers.server_error); // Para erros customizados da app
+    if (handlers.server_error) newSocket.on("error", handlers.server_error);
 
-
-    // Registrar todos os handlers passados
     if (handlers.new_chat_message) newSocket.on("new_chat_message", handlers.new_chat_message);
     if (handlers.chat_message_deleted) newSocket.on("chat_message_deleted", handlers.chat_message_deleted);
     if (handlers.online_users) newSocket.on("online_users", (data: OnlineUser[]) => handlers.online_users?.(data));
@@ -165,12 +154,12 @@ export const chatService = {
     if (handlers.user_left) newSocket.on("user_left", handlers.user_left);
     if (handlers.user_typing) newSocket.on("user_typing", handlers.user_typing);
     if (handlers.user_status_changed) newSocket.on("user_status_changed", handlers.user_status_changed);
-    if (handlers.new_private_message) newSocket.on("new_private_message", handlers.new_private_message); //
-    if (handlers.private_message_sent) newSocket.on("private_message_sent", handlers.private_message_sent); //
-    if (handlers.message_marked_read) newSocket.on("message_marked_read", handlers.message_marked_read); //
-    if (handlers.message_read) newSocket.on("message_read", handlers.message_read); //
-    if (handlers.conversation_marked_read) newSocket.on("conversation_marked_read", handlers.conversation_marked_read); //
-    if (handlers.pong) newSocket.on("pong", handlers.pong); //
+    if (handlers.new_private_message) newSocket.on("new_private_message", handlers.new_private_message); 
+    if (handlers.private_message_sent) newSocket.on("private_message_sent", handlers.private_message_sent); 
+    if (handlers.message_marked_read) newSocket.on("message_marked_read", handlers.message_marked_read); 
+    if (handlers.message_read) newSocket.on("message_read", handlers.message_read); 
+    if (handlers.conversation_marked_read) newSocket.on("conversation_marked_read", handlers.conversation_marked_read); 
+    if (handlers.pong) newSocket.on("pong", handlers.pong);
 
 
     socket = newSocket;
@@ -250,20 +239,18 @@ export const chatService = {
   }
 };
 
-// Interface para mensagens privadas na UI (pode ser expandida)
 export interface DisplayPrivateMessage {
   id: string;
   content: string;
   senderId: string;
   senderNickname: string;
   senderAvatar?: string | null;
-  timestamp: string; // Já formatado
-  isOwnMessage: boolean; // Para alinhar na UI
+  timestamp: string; 
+  isOwnMessage: boolean; 
   replyTo?: string | null;
-  // adicionar mais campos conforme necessário para exibição
 }
 
-export interface DisplayMessage { // Mantida para chat público
+export interface DisplayMessage { 
   id: string;
   content: string;
   authorNickname: string;
