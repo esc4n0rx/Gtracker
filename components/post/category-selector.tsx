@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Category, Forum } from '@/lib/api'
-import { ChevronDown, ChevronRight, Folder, FolderOpen, Check } from 'lucide-react'
+import { ChevronDown, ChevronRight, Folder, FolderOpen, Check, Lock, AlertCircle } from 'lucide-react'
+import { canPostInForum, validateForumSelection } from '@/lib/forum-utils'
 
 interface CategorySelectorProps {
   categories: Category[]
@@ -67,6 +68,16 @@ export function CategorySelector({
   }
 
   const handleForumSelect = (forumId: string, categoryId: string) => {
+    // Validar se o fórum pode receber postagens
+    const category = categories.find(cat => cat.id === categoryId)
+    if (!category) return
+
+    const validation = validateForumSelection(forumId, category.forums)
+    if (!validation.isValid) {
+      // Não permitir seleção se inválida
+      return
+    }
+
     onCategoryChange(categoryId)
     onForumChange(forumId)
   }
@@ -95,9 +106,17 @@ export function CategorySelector({
 
   return (
     <div className="space-y-2">
-      <p className="text-sm text-slate-400 mb-4">
-        Selecione onde deseja postar seu conteúdo. Você pode escolher fóruns principais ou subfóruns específicos. *
-      </p>
+      <div className="mb-4">
+        <p className="text-sm text-slate-400 mb-2">
+          Selecione onde deseja postar seu conteúdo.
+        </p>
+        <div className="flex items-start gap-2 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+          <AlertCircle className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+          <div className="text-xs text-blue-400">
+            <strong>Regra importante:</strong> Se um fórum possui subfóruns, você deve postar obrigatoriamente em um dos subfóruns específicos, não no fórum principal.
+          </div>
+        </div>
+      </div>
 
       {/* Selected Forum Display */}
       {selectedForum && (
@@ -153,6 +172,7 @@ export function CategorySelector({
                   const subforums = category.forums.filter(f => f.parent_forum_id === forum.id)
                   const hasSubforums = subforums.length > 0
                   const isForumExpanded = expandedForums.has(forum.id)
+                  const canPost = canPostInForum(forum, category.forums)
 
                   return (
                     <div key={forum.id}>
@@ -160,15 +180,23 @@ export function CategorySelector({
                       <div className="flex border-t border-slate-600">
                         <button
                           type="button"
-                          onClick={() => handleForumSelect(forum.id, category.id)}
+                          onClick={() => canPost && handleForumSelect(forum.id, category.id)}
+                          disabled={!canPost}
                           className={`
                             flex-1 p-3 text-left flex items-center gap-3
-                            hover:bg-slate-700/30 transition-colors
-                            ${selectedForum === forum.id ? 'bg-retro-blue/10 text-retro-neon' : 'text-retro-text'}
+                            transition-colors ml-4
+                            ${!canPost 
+                              ? 'cursor-not-allowed bg-slate-800/50 opacity-60' 
+                              : selectedForum === forum.id 
+                                ? 'bg-retro-blue/10 text-retro-neon hover:bg-retro-blue/20' 
+                                : 'text-retro-text hover:bg-slate-700/30'
+                            }
                           `}
                         >
-                          <div className="w-5 h-5 bg-gradient-to-br from-slate-600 to-slate-700 rounded flex items-center justify-center ml-4">
-                            {hasSubforums ? (
+                          <div className="w-5 h-5 bg-gradient-to-br from-slate-600 to-slate-700 rounded flex items-center justify-center">
+                            {!canPost ? (
+                              <Lock className="w-3 h-3 text-red-400" />
+                            ) : hasSubforums ? (
                               <FolderOpen className="w-3 h-3 text-slate-300" />
                             ) : (
                               <Folder className="w-3 h-3 text-slate-300" />
@@ -177,6 +205,11 @@ export function CategorySelector({
                           <div className="flex-1">
                             <div className="font-medium flex items-center gap-2">
                               {forum.name}
+                              {!canPost && (
+                                <span className="text-xs text-red-400 font-normal">
+                                  (Possui subfóruns - postagem obrigatória nos subfóruns)
+                                </span>
+                              )}
                               {selectedForum === forum.id && (
                                 <Check className="w-4 h-4 text-retro-neon" />
                               )}
@@ -204,33 +237,43 @@ export function CategorySelector({
                         <div className="bg-slate-800/30">
                           {subforums
                             .sort((a, b) => a.display_order - b.display_order)
-                            .map(subforum => (
-                              <button
-                                key={subforum.id}
-                                type="button"
-                                onClick={() => handleForumSelect(subforum.id, category.id)}
-                                className={`
-                                  w-full p-3 text-left flex items-center gap-3 border-t border-slate-600
-                                  hover:bg-slate-700/30 transition-colors ml-8
-                                  ${selectedForum === subforum.id ? 'bg-retro-blue/10 text-retro-neon' : 'text-slate-300'}
-                                `}
-                              >
-                                <div className="w-4 h-4 bg-slate-600 rounded flex items-center justify-center">
-                                  <Folder className="w-2 h-2 text-slate-400" />
-                                </div>
-                                <div className="flex-1">
-                                  <div className="text-sm font-medium flex items-center gap-2">
-                                    ↳ {subforum.name}
-                                    {selectedForum === subforum.id && (
-                                      <Check className="w-4 h-4 text-retro-neon" />
+                            .map(subforum => {
+                              const canPostInSubforum = canPostInForum(subforum, category.forums)
+                              
+                              return (
+                                <button
+                                  key={subforum.id}
+                                  type="button"
+                                  onClick={() => canPostInSubforum && handleForumSelect(subforum.id, category.id)}
+                                  disabled={!canPostInSubforum}
+                                  className={`
+                                    w-full p-3 text-left flex items-center gap-3 border-t border-slate-600
+                                    transition-colors ml-8
+                                    ${!canPostInSubforum
+                                      ? 'cursor-not-allowed opacity-60'
+                                      : selectedForum === subforum.id 
+                                        ? 'bg-retro-blue/10 text-retro-neon hover:bg-retro-blue/20' 
+                                        : 'text-slate-300 hover:bg-slate-700/30'
+                                    }
+                                  `}
+                                >
+                                  <div className="w-4 h-4 bg-slate-600 rounded flex items-center justify-center">
+                                    <Folder className="w-2 h-2 text-slate-400" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="text-sm font-medium flex items-center gap-2">
+                                      ↳ {subforum.name}
+                                      {selectedForum === subforum.id && (
+                                        <Check className="w-4 h-4 text-retro-neon" />
+                                      )}
+                                    </div>
+                                    {subforum.description && (
+                                      <div className="text-xs text-slate-400 mt-1">{subforum.description}</div>
                                     )}
                                   </div>
-                                  {subforum.description && (
-                                    <div className="text-xs text-slate-400 mt-1">{subforum.description}</div>
-                                  )}
-                                </div>
-                              </button>
-                            ))}
+                                </button>
+                              )
+                            })}
                         </div>
                       )}
                     </div>

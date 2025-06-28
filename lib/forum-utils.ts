@@ -20,6 +20,49 @@ export function organizeForumsWithSubforums(forums: Forum[]): Forum[] {
   }))
 }
 
+/**
+ * Verifica se um fórum pode receber postagens diretas
+ * Regra: Se um fórum possui subfóruns, as postagens devem ser feitas nos subfóruns
+ */
+export function canPostInForum(forum: Forum, allForums: Forum[]): boolean {
+  // Verificar se este fórum possui subfóruns
+  const hasSubforums = allForums.some(subforum => subforum.parent_forum_id === forum.id)
+  
+  // Se tem subfóruns, não pode postar diretamente no fórum principal
+  // Só pode postar em subfóruns (forums que possuem parent_forum_id) ou fóruns sem subfóruns
+  return !hasSubforums || forum.parent_forum_id !== null
+}
+
+/**
+ * Obtém todos os fóruns onde é possível postar (subfóruns ou fóruns sem subfóruns)
+ */
+export function getPostableForums(forums: Forum[]): Forum[] {
+  return forums.filter(forum => canPostInForum(forum, forums))
+}
+
+/**
+ * Verifica se uma seleção de fórum é válida para postagem
+ */
+export function validateForumSelection(forumId: string, allForums: Forum[]): {
+  isValid: boolean
+  reason?: string
+} {
+  const selectedForum = allForums.find(f => f.id === forumId)
+  
+  if (!selectedForum) {
+    return { isValid: false, reason: 'Fórum não encontrado' }
+  }
+  
+  if (!canPostInForum(selectedForum, allForums)) {
+    return { 
+      isValid: false, 
+      reason: 'Este fórum possui subfóruns. Você deve postar em um dos subfóruns específicos.' 
+    }
+  }
+  
+  return { isValid: true }
+}
+
 export function formatRelativeTime(dateString: string): string {
   const date = new Date(dateString)
   const now = new Date()
