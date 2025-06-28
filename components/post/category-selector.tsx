@@ -72,7 +72,12 @@ export function CategorySelector({
     const category = categories.find(cat => cat.id === categoryId)
     if (!category) return
 
-    const validation = validateForumSelection(forumId, category.forums)
+    // Criar lista flat de todos os fóruns para validação
+    const allForums = category.forums.flatMap(forum => 
+      forum.subforums ? [forum, ...forum.subforums] : [forum]
+    )
+
+    const validation = validateForumSelection(forumId, allForums)
     if (!validation.isValid) {
       // Não permitir seleção se inválida
       return
@@ -128,7 +133,9 @@ export function CategorySelector({
           <div className="mt-1 text-sm text-slate-300">
             {(() => {
               const category = categories.find(cat => cat.id === selectedCategory)
-              const forum = category?.forums.find(f => f.id === selectedForum)
+              const forum = category?.forums.flatMap(f => 
+                f.subforums ? [f, ...f.subforums] : [f]
+              ).find(f => f.id === selectedForum)
               return forum && category ? `${category.name} > ${getForumPath(forum, category)}` : 'Fórum selecionado'
             })()}
           </div>
@@ -137,6 +144,7 @@ export function CategorySelector({
 
       {categories.map(category => {
         const isExpanded = expandedCategories.has(category.id)
+        // Agora usando os fóruns já organizados com subfóruns
         const mainForums = category.forums.filter(forum => !forum.parent_forum_id)
 
         return (
@@ -169,10 +177,16 @@ export function CategorySelector({
             {isExpanded && (
               <div className="bg-slate-900/50">
                 {mainForums.map(forum => {
-                  const subforums = category.forums.filter(f => f.parent_forum_id === forum.id)
+                  // Agora os subfóruns já estão organizados na propriedade subforums
+                  const subforums = forum.subforums || []
                   const hasSubforums = subforums.length > 0
                   const isForumExpanded = expandedForums.has(forum.id)
-                  const canPost = canPostInForum(forum, category.forums)
+                  
+                  // Criar lista flat para validação
+                  const allForums = category.forums.flatMap(f => 
+                    f.subforums ? [f, ...f.subforums] : [f]
+                  )
+                  const canPost = canPostInForum(forum, allForums)
 
                   return (
                     <div key={forum.id}>
@@ -238,7 +252,7 @@ export function CategorySelector({
                           {subforums
                             .sort((a, b) => a.display_order - b.display_order)
                             .map(subforum => {
-                              const canPostInSubforum = canPostInForum(subforum, category.forums)
+                              const canPostInSubforum = canPostInForum(subforum, allForums)
                               
                               return (
                                 <button

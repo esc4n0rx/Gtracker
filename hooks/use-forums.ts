@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { categoriesApi, Category, ApiError } from '@/lib/api'
+import { organizeForumsWithSubforums } from '@/lib/forum-utils'
 
 export function useForums() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -14,7 +15,14 @@ export function useForums() {
       setIsLoading(true)
       setError(null)
       const data = await categoriesApi.getAll(false) // Apenas categorias ativas
-      setCategories(data)
+      
+      // Organizar subfóruns dentro de cada categoria
+      const categoriesWithSubforums = data.map(category => ({
+        ...category,
+        forums: organizeForumsWithSubforums(category.forums)
+      }))
+      
+      setCategories(categoriesWithSubforums)
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message)
